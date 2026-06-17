@@ -245,7 +245,7 @@ Click **Display** in the left panel:
 | Graphics memory | 4 GB |
 | Display scaling | Automatically adjust |
 
-![Review Summary](/images/lab-setup/windows-11/20-installation-16.png)
+![Image](/images/lab-setup/windows-11/20-installation-16.png)
 
 > Virtual graphics memory is drawn from host RAM, not a dedicated GPU. Allocate based on host machine's physical RAM:
 >
@@ -265,7 +265,7 @@ Click **New CD/DVD (SATA)** in the left panel:
 | Connection | Use ISO image file |
 | ISO path | Browse to downloaded ISO file |
 
-![Review Summary](/images/lab-setup/windows-11/21-installation-17.png)
+![Image](/images/lab-setup/windows-11/21-installation-17.png)
 
 ---
 
@@ -278,7 +278,7 @@ Click **USB Controller** in the left panel:
 | USB compatibility | USB 3.1 |
 | Show all USB input devices | Unchecked |
 
-![Review Summary](/images/lab-setup/windows-11/22-installation-18.png)
+![Image](/images/lab-setup/windows-11/22-installation-18.png)
 
 ---
 
@@ -286,11 +286,11 @@ Click **USB Controller** in the left panel:
 
 Click **Close** to return to the summary screen.
 
-![Review Summary](/images/lab-setup/windows-11/23-installation-19.png)
+![Image](/images/lab-setup/windows-11/23-installation-19.png)
 
 Click **Finish** to create the virtual machine.
 
-![Review Summary](/images/lab-setup/windows-11/24-installation-20.png)
+![Image](/images/lab-setup/windows-11/24-installation-20.png)
 
 > **Note:** VMware Workstation Pro 17 automatically adds TPM 2.0 when Windows 11 x64 is selected as the guest OS.
 > 
@@ -500,28 +500,28 @@ Open **PowerShell as Administrator** and run the following commands.
 ### Step 1 - Configure Static IP Address
 
 **Check existing configuration:**
-```
+```powershell
 ipconfig /all
 ```
 
 ![Image](/images/lab-setup/windows-11/54-post-installation-01.png)
 
 **Remove existing DHCP assigned IP:**
-```
+```powershell
 Remove-NetIPAddress -InterfaceAlias "Ethernet0" -Confirm:$false
 ```
 
 ![Image](/images/lab-setup/windows-11/55-post-installation-02.png)
 
 **Set static IP:**
-```
+```powershell
 New-NetIPAddress -InterfaceAlias "Ethernet0" -IPAddress 192.168.48.128 -PrefixLength 24 -DefaultGateway 192.168.48.2
 ```
 
 ![Image](/images/lab-setup/windows-11/56-post-installation-03.png)
 
 **Set DNS:**
-```
+```powershell
 Set-DnsClientServerAddress -InterfaceAlias "Ethernet0" -ServerAddresses 8.8.8.8
 ```
 
@@ -532,19 +532,19 @@ Set-DnsClientServerAddress -InterfaceAlias "Ethernet0" -ServerAddresses 8.8.8.8
 ### Step 2 - Set Hostname
 
 **Rename computer:**
-```
+```powershell
 Rename-Computer -NewName "WIN11-CLIENT01" -Force -Restart
 ```
 
 After the VM restarts, verify changes:
-```
+```powershell
 ipconfig /all
 ```
 
 ![Image](/images/lab-setup/windows-11/58-post-installation-05.png)
 
 Test network connectivity:
-```
+```powershell
 Test-NetConnection 8.8.8.8
 ```
 
@@ -555,7 +555,7 @@ Test-NetConnection 8.8.8.8
 ### Step 3 - Enable Audit and Logging Policies
 
 **Enable Process Creation Auditing:**
-```
+```powershell
 auditpol /set /subcategory:"Process Creation" /success:enable /failure:enable
 ```
 
@@ -566,7 +566,7 @@ Records every process launched on the system into Windows Security Event Log as 
 ---
 
 **Enable PowerShell Script Block Logging:**
-```
+```powershell
 $path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"
 New-Item -Path $path -Force
 New-ItemProperty -Path $path -Name "EnableScriptBlockLogging" -Value 1 -PropertyType DWORD -Force
@@ -579,7 +579,7 @@ Records the actual content of every PowerShell script executed as **Event ID 410
 ---
 
 **Enable PowerShell Module Logging:**
-```
+```powershell
 $path2 = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ModuleLogging"
 New-Item -Path $path2 -Force
 New-ItemProperty -Path $path2 -Name "EnableModuleLogging" -Value 1 -PropertyType DWORD -Force
@@ -592,7 +592,7 @@ Records every PowerShell command and pipeline execution as **Event ID 4103**, in
 ---
 
 **Set PowerShell Execution Policy:**
-```
+```powershell
 Set-ExecutionPolicy Bypass -Scope LocalMachine -Force
 ```
 
@@ -606,7 +606,7 @@ Allows all lab scripts to execute without restriction.
 ---
 
 **Create Tools Directory:**
-```
+```powershell
 New-Item -ItemType Directory -Path "C:\Tools" -Force
 ```
 
