@@ -504,6 +504,27 @@ network:
 
 Save the file: ```"Ctrl + O" > "Enter" > "Ctrl + X"```
 
+Alternatively, use below heredoc command:
+
+```bash
+sudo tee /etc/netplan/00-installer-config.yaml > /dev/null << 'EOF'
+network:
+  version: 2
+  ethernets:
+    ens33:
+      dhcp4: no
+      addresses:
+        - 192.168.48.129/24
+      routes:
+        - to: default
+          via: 192.168.48.2
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+EOF
+```
+
 **Step 1.3 - Apply Netplan Configuration:**
 
 Set appropriate permission for the conf file:
