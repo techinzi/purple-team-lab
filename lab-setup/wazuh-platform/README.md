@@ -246,19 +246,23 @@ sudo bash wazuh-install.sh --wazuh-server wazuh-1
 
 ![Image](/images/lab-setup/wazuh-platform/12-installation.png)
 
-### Step 2 — Enable and Start Wazuh Manager
+### Step 2 — Enable and Start Wazuh Manager & Filebeat
 
 ```bash
 sudo systemctl enable wazuh-manager
 sudo systemctl start wazuh-manager
+sudo systemctl enable filebeat
+sudo systemctl start filebeat
 ```
 
 ![Image](/images/lab-setup/wazuh-platform/13-installation.png)
 
-### Step 3 — Verify Wazuh Manager is Running
+![Image](/images/lab-setup/wazuh-platform/13-1-installation.png)
+
+### Step 3 — Verify Wazuh Manager & Filebeat are Running
 
 ```bash
-sudo systemctl status wazuh-manager
+sudo systemctl is-active wazuh-manager filebeat
 ```
 
 ![Image](/images/lab-setup/wazuh-platform/14-installation.png)
