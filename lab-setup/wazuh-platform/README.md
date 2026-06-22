@@ -344,10 +344,10 @@ sudo systemctl status wazuh-dashboard
 
 ## Part 7 — Verify All Services
 
-### Step 1 — Check All Three Wazuh Services
+### Step 1 — Check All Wazuh Services
 
 ```bash
-sudo systemctl is-active wazuh-manager wazuh-indexer wazuh-dashboard
+sudo systemctl is-active wazuh-manager wazuh-indexer wazuh-dashboard filebeat
 ```
 
 ![Image](/images/lab-setup/wazuh-platform/21-installation.png)
