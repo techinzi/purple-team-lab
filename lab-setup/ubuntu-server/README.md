@@ -525,7 +525,49 @@ network:
 EOF
 ```
 
-**Step 1.3 - Apply Netplan Configuration:**
+**Step 1.3 — Disable Cloud-Init Network Configuration (Recommended):**
+
+Ubuntu Server installations may create an additional Netplan file
+through Cloud-Init that enables DHCP. If left in place, the server
+can receive a second IP address from DHCP in addition to the
+configured static IP.
+
+Check whether the Cloud-Init Netplan file exists and remove:
+
+```bash
+# Check if Cloud-Init Netplan file exists
+ls -l /etc/netplan/
+
+# Read the content of Cloud-Init Netplan file
+sudo cat /etc/netplan/50-cloud-init.yaml
+
+# Backup the Cloud-Init Netplan file
+sudo cp /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.bak
+
+# Remove the Cloud-Init Netplan file
+sudo rm /etc/netplan/50-cloud-init.yaml
+```
+
+![Image](/images/lab-setup/ubuntu-server/47-post-installation-01.png)
+
+Prevent Cloud-Init from recreating DHCP network settings in future boots:
+```bash
+sudo mkdir -p /etc/cloud/cloud.cfg.d
+sudo nano /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+```
+
+![Image](/images/lab-setup/ubuntu-server/47-post-installation-02.png)
+
+Add the following line:
+```
+network: {config: disabled}
+```
+
+![Image](/images/lab-setup/ubuntu-server/47-post-installation-03.png)
+
+Save and exit: `"Ctrl + O" > "Enter" > "Ctrl + X"`
+
+**Step 1.4 - Apply Netplan Configuration:**
 
 Set appropriate permission for the conf file:
 
@@ -533,10 +575,16 @@ Set appropriate permission for the conf file:
 sudo chmod 600 /etc/netplan/00-installer-config.yaml
 ```
 
-Apply netplan configuration:
+Generate and apply the new network configuration:
 
 ```bash
+sudo netplan generate
 sudo netplan apply
+```
+
+Restart the networking service:
+```bash
+sudo systemctl restart systemd-networkd
 ```
 
 ![Image](/images/lab-setup/ubuntu-server/48-post-installation.png)
@@ -547,7 +595,7 @@ sudo netplan apply
 >
 > It does not mean network configuration failed and warning can be safely ignored.
 
-**Step 1.4 - Verify Static IP:**
+**Step 1.5 - Verify Static IP:**
 
 ```bash
 ip addr show ens33
