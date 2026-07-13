@@ -559,9 +559,19 @@ Test-NetConnection 8.8.8.8
 auditpol /set /subcategory:"Process Creation" /success:enable /failure:enable
 ```
 
-Records every process launched on the system into Windows Security Event Log as **Event ID 4688**. Without this there is no native Windows log of which programs executed, when, and by whom. Required to capture command-line arguments of suspicious processes.
+Records every process launched on the system into Windows Security Event Log as **Event ID 4688**. Without this there is no native Windows log of which programs executed, when, and by whom.
 
 ![Image](/images/lab-setup/windows-11/60-post-installation-07.png)
+
+**Enable Command-Line Logging for Event ID 4688:**
+```powershell
+New-Item -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System\Audit" -Force
+Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System\Audit" -Name ProcessCreationIncludeCmdLine_Enabled -Value 1
+gpupdate /force
+```
+Enhances Windows Security **Event ID 4688** by recording the full command-line arguments used to launch a process. Without this setting, Event ID 4688 contains only the executable path and omits the command line.
+
+![Image](/images/lab-setup/windows-11/60-post-installation-08.png)
 
 ---
 
