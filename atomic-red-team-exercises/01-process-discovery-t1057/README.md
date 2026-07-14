@@ -5,7 +5,7 @@
 Execute a realistic Process Discovery technique using Atomic Red Team,
 capture endpoint telemetry via Sysmon and Windows Event Logs, validate
 detection coverage in Wazuh, identify detection gaps, and document
-findings as a structured Purple Team assessment case study.
+findings.
 
 ---
 
@@ -23,7 +23,7 @@ findings as a structured Purple Team assessment case study.
 
 ## Prerequisites
 
-Verify the following on WIN11-CLIENT01 before starting the exercise:
+Verify the following on **WIN11-CLIENT01** before starting the exercise:
 
 ```powershell
 # Verify Sysmon is running
@@ -36,7 +36,7 @@ Get-Service WazuhSvc
 Get-Command Invoke-AtomicTest
 ```
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/01-prerequisite.png)
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/01-prerequisite.png)
 
 Take a VMware snapshot before proceeding: `VMware > VM menu > Snapshot > Take Snapshot > Pre-Exercise`
 
@@ -54,7 +54,7 @@ Invoke-AtomicTest T1057 -ShowDetailsBrief
 Invoke-AtomicTest T1057 -ShowDetails -TestNumbers 2
 ```
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/02-prerequisite.png)
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/02-prerequisite.png)
 
 > Review the attack description and command.
 
@@ -84,24 +84,26 @@ privilege escalation to:
 Invoke-AtomicTest T1057 -CheckPrereqs -TestNumbers 2
 ```
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/03-prerequisite.png)
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/03-prerequisite.png)
+
+> Prerequisite is met.
 
 ### Step 3 — Execute the Attack
 
-Open PowerShell as Administrator on WIN11-CLIENT01 and execute Test#2:
+Open PowerShell as **Administrator** on **WIN11-CLIENT01** and execute **Test#2**:
 
 ```powershell
 Get-Date
 Invoke-AtomicTest T1057 -TestNumbers 2
 ```
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/04-attack.png)
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/04-attack.png)
 
 ---
 
 ## Part 2 — Telemetry Collection
 
-### Step 1 — Confirm Sysmon Captured It
+### Step 1 — Confirm Sysmon Captured the Activity
 
 **Relevant Event IDs:**
 
@@ -120,9 +122,9 @@ $testStartTime = Get-Date "2026-07-14 19:00:00"
 Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" | Where-Object { $_.Id -eq 1 -and $_.Message -like "*tasklist*" -and $_.TimeCreated -gt $testStartTime } | Select-Object TimeCreated, Id, Message | Format-List
 ```
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/05-sysmon.png)
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/05-sysmon.png)
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/06-sysmon.png)
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/06-sysmon.png)
 
 > For a single command execution, we found two logs becuase every process
 > creation generates an individual log:
@@ -136,13 +138,13 @@ Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" | Where-Object { $_
 
 ---
 
-### Step 2 — Confirm Windows Event Logs Captured It
+### Step 2 — Confirm Windows Event Logs Captured the Activity
 
 **Relevant Log:**
 
 | Log | Event ID | Description |
 |---|---|---|
-| Security | 4688 | Process creation — requires audit policy enabled |
+| Security | 4688 | Process creation |
 
 **PowerShell — Collect Windows Security Log Evidence:**
 
@@ -154,25 +156,29 @@ $testStartTime = Get-Date "2026-07-14 19:00:00"
 Get-WinEvent -LogName Security | Where-Object { $_.Id -eq 4688 -and $_.TimeCreated -gt $testStartTime -and $_.Message -like "*tasklist*" } | Select-Object TimeCreated, Id, Message | Format-List
 ```
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/07-windowsLog.png)
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/07-windowsLog.png)
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/08-windowsLog.png)
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/08-windowsLog.png)
 
 ---
 
-### Step 3 — Confirm Wazuh Detected It
+### Step 3 — Confirm Wazuh Detected the Activity
 
-On Wazuh Dashboard, go to `Left sidebar > Threat intelligence > Threat Hunting > Events`
+On Wazuh Dashboard, go to `Left sidebar > Threat intelligence > Threat Hunting > Events`.
+
 Set time range as per test execution.
-Search for tasklist execution: `data.win.eventdata.image: *tasklist*`
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/09-wazuh.png)
+Search for **tasklist** execution: `data.win.eventdata.image: *tasklist*`
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/10-wazuh.png)
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/09-wazuh.png)
+
+One Wazuh rule detected the activity. Open the alert details:
+
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/10-wazuh.png)
 
 This exercise triggered **Wazuh Rule 92032 – Suspicious Windows cmd shell execution**.
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/11-wazuh.png)
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/11-wazuh.png)
 
 The rule monitors **Sysmon Event ID 1 (Process Creation)** and looks for processes launched as:
 
@@ -185,7 +191,7 @@ The detection is based on two conditions:
 - Parent process is `cmd.exe`
 - Parent command line contains `/c`
 
-This rule is intentionally low severity because `cmd.exe /c` is commonly used by both legit users and attackers. It serves as a behavioural indicator that should be correlated with additional telemetry such as the executed command, parent process, user context, and subsequent activity.
+This rule is intentionally low severity (Level=3) because `cmd.exe /c` is commonly used by both legit users and attackers. It serves as a behavioural indicator that should be correlated with additional telemetry such as the executed command, parent process, user context, and subsequent activity.
 
 ---
 
@@ -222,29 +228,29 @@ Not required.
 2. Create a new layer for the first time.
 3. Find **T1057 — Process Discovery** in the **Discovery** tactic column
 4. Set color: Green (telemetry present and alerted)
-6. Add comment: Tested using "AtomicTest T1057 - Test#2"
+6. Add comment: `Tested using "AtomicTest T1057 - Test#2"`
 7. Export updated layer as JSON
 8. Save as `coverage-validation-status.json`
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/12-navigator.png)
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/12-navigator.png)
 
 ---
 
-## Part 4 — Cleanup
+## Part 5 — Cleanup
 
-### Preferred — Restore VMware Snapshot
+### Option 1: Restore VMware Snapshot (Preferred)
 
-VMware > VM menu > Snapshot > Snapshot Manager > Select "Pre-Exercise" > Click Restore
+`VMware > VM menu > Snapshot > Snapshot Manager > Select "Pre-Exercise" > Click Restore`
 
 This guarantees a completely clean baseline for the next exercise.
 
-### Manual Cleanup
+### Option 2: Manual Cleanup
 
 ```powershell
 Invoke-AtomicTest T1057 -TestNumbers 2 -Cleanup
 ```
 
-![Image](/images/atomic-red-team-exercises/process-discovery-t1057/13-cleanup.png)
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/13-cleanup.png)
 
 > **Note:** T1057 Test #2 (`tasklist`) is non-persistent and leaves
 > no artifacts on disk or in the registry. The Atomic Red Team cleanup
