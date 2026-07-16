@@ -23,7 +23,14 @@ findings.
 
 ## Prerequisites
 
-Verify the following on **WIN11-CLIENT01** before starting the exercise:
+Verify the following on **ubuntu-server01**:
+```bash
+# Verify all Wazuh services are active
+sudo systemctl is-active wazuh-manager wazuh-indexer wazuh-dashboard filebeat
+```
+![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/00-prerequisite.png)
+
+Verify the following on **WIN11-CLIENT01**:
 
 ```powershell
 # Verify Sysmon is running
@@ -34,6 +41,10 @@ Get-Service WazuhSvc
 
 # Verify Atomic Red Team module is loaded
 Get-Command Invoke-AtomicTest
+
+# Verify connectivity to Wazuh Manager
+Test-NetConnection -ComputerName 192.168.48.129 -Port 1514
+Test-NetConnection -ComputerName 192.168.48.129 -Port 1515
 ```
 
 ![Image](/images/atomic-red-team-exercises/01-process-discovery-t1057/01-prerequisite.png)
