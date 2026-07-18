@@ -285,9 +285,195 @@ sudo grep -i "evil.exe" /var/ossec/logs/alerts/alerts.log
 
 ---
 
-## Part 6 — Take Snapshot
+## Part 6 — Wazuh Archives Index Configuration
 
-### Step 1 — Take Snapshot After Agent Configuration
+### Why Archives are Required for Purple Team Work
+
+Purple Team activities require access to both detection alerts and the
+underlying raw telemetry generated during adversary simulation.
+
+By default Wazuh only stores events that trigger a detection rule
+in the **`wazuh-alerts-*`** index. Raw events that do not match any
+rule — which includes most baseline telemetry — are discarded and
+never sent to the Wazuh Indexer.
+
+The **`wazuh-archives-*`** index stores the raw events received and decoded by
+the Wazuh Manager, regardless of whether they trigger a detection rule.
+Raw archived events provide the ground truth needed to:
+- validate telemetry collection
+- understand event structure
+- inspect available fields
+- determine whether a missing alert is caused by a **telemetry gap** or a **detection gap**.
+
+The `wazuh-archives-*` index does not appear in the Wazuh Dashboard
+by default because archive logging is **disabled out of the box**:
+
+`Left sidebar > Explore > Discover`
+
+![Image](/images/lab-setup/wazuh-agent/22-archive-index.png)
+
+![Image](/images/lab-setup/wazuh-agent/23-archive-index.png)
+
+> `wazuh-archives-*` index is not available.
+
+---
+
+### Step 1 — Enable Archives in Wazuh Manager
+
+SSH into **UBUNTU-SERVER01**:
+
+```bash
+ssh labadmin@192.168.48.129
+```
+
+Edit the Wazuh Manager configuration:
+
+```bash
+sudo nano /var/ossec/etc/ossec.conf
+```
+
+Find the `<global>` section and set `logall` and `logall_json` to `yes`:
+
+![Image](/images/lab-setup/wazuh-agent/24-archive-index.png)
+
+Save: **Ctrl + O** > **Enter** > **Ctrl + X**
+
+> **What these settings do:**
+>
+> | Setting | Effect |
+> |---|---|
+> | `logall` | Writes all events to `/var/ossec/logs/archives/archives.log` |
+> | `logall_json` | Writes all events in JSON format to `/var/ossec/logs/archives/archives.json` — required for Filebeat ingestion |
+
+Restart Wazuh Manager:
+
+```bash
+sudo systemctl restart wazuh-manager
+```
+
+Verify archive files are being created:
+
+```bash
+sudo ls -lh /var/ossec/logs/archives/
+```
+
+![Image](/images/lab-setup/wazuh-agent/25-archive-index.png)
+
+---
+
+### Step 2 — Enable Filebeat to Forward Archives
+
+Filebeat must be configured to read the archives JSON file and
+forward it to the Wazuh Indexer.
+
+Edit the Filebeat configuration:
+
+```bash
+sudo nano /etc/filebeat/filebeat.yml
+```
+
+Find the archives module section and set `enabled` to `true`:
+
+![Image](/images/lab-setup/wazuh-agent/26-archive-index.png)
+
+Save: **Ctrl + O** > **Enter** > **Ctrl + X**
+
+Restart Filebeat:
+
+```bash
+sudo systemctl restart filebeat
+```
+
+Verify Filebeat is running:
+
+```bash
+sudo systemctl status filebeat | grep Active
+```
+
+Check Filebeat logs for archive ingestion:
+
+```bash
+sudo tail -20 /var/log/filebeat/filebeat
+```
+
+Look for: `INFO Harvester started for file: /var/ossec/logs/archives/archives.json`
+
+---
+
+### Step 3 — Create Index Pattern in Wazuh Dashboard
+
+The `wazuh-archives-*` index pattern must be manually created in the
+Dashboard before archived events become searchable.
+
+1. Open browser on Windows 11 host: `https://192.168.48.129`
+
+2. Navigate to: `Left sidebar > Dashboard management > Dashboards Management > Index patterns > Create index pattern`
+
+![Image](/images/lab-setup/wazuh-agent/27-archive-index.png)
+
+3. Enter the index pattern: `wazuh-archives-*`
+
+4. Click **Next step**
+
+![Image](/images/lab-setup/wazuh-agent/28-archive-index.png)
+
+5. Select time field: `timestamp`
+
+6. Click **Create index pattern**
+
+![Image](/images/lab-setup/wazuh-agent/29-archive-index.png)
+
+---
+
+### Step 4 — Verify Archives Appear in Dashboard
+
+Navigate to: `Left sidebar > Explore > Discover > Index selector (top left dropdown)`
+
+![Image](/images/lab-setup/wazuh-agent/30-archive-index.png)
+
+We should now see all raw events — including those that did not
+match any Wazuh detection rule.
+
+---
+
+### Index Comparison
+
+| Index | Contains | Use Case |
+|---|---|---|
+| `wazuh-alerts-*` | Events that matched a Wazuh rule | Alert triage, detection validation |
+| `wazuh-archives-*` | All events regardless of rule match | Baseline analysis, gap identification, raw telemetry review |
+| `wazuh-monitoring-*` | Wazuh agent status and health | Agent connectivity monitoring |
+| `wazuh-statistics-*` | Wazuh performance metrics | Platform health monitoring |
+
+---
+
+### Important — Disk Space Warning
+
+Enabling `logall_json` significantly increases disk usage on
+**UBUNTU-SERVER01** because every event from every agent will now
+be stored in the Wazuh Indexer — not just alerted events.
+
+Monitor disk usage after enabling:
+
+```bash
+df -h /
+```
+
+If disk usage grows too quickly:
+
+```bash
+# Check archive index size in OpenSearch
+curl -k -u admin:'YourPassword' https://localhost:9200/_cat/indices/wazuh-archives-*?v\&s=store.size:desc
+
+# Delete old archive indices if needed (replace date)
+curl -k -u admin:'YourPassword' -X DELETE https://localhost:9200/wazuh-archives-4.x-YYYY.MM.DD
+```
+
+---
+
+## Part 7 — Take Snapshot
+
+### Step 1 — Take *WIN11-CLIENT01* Snapshot After Agent Configuration
 
 Lock the screen: `Win + L`
 
@@ -300,6 +486,25 @@ In VMware Workstation: `VM menu > Snapshot > Take Snapshot`
 
 Click **"Take Snapshot"**.
 
-![Image](/images/lab-setup/wazuh-agent/22-validation.png)
+![Image](/images/lab-setup/wazuh-agent/31-snapshot.png)
+
+### Step 2 — Take *ubuntu-server01* Snapshot After Archives Index Configuration
+
+```bash
+# Clear bash history
+history -c && history -w
+
+#Exit SSH session
+exit
+```
+
+In VMware, with UBUNTU-SERVER01 VM running:
+
+`VM menu > Snapshot > Take Snapshot`
+
+| **Field** | **Value** |
+|---|---|
+| Name | `Wazuh Archives Enabled` |
+| Description | `logall and logall_json enabled. Filebeat archives module enabled. wazuh-archives-* index pattern created in Dashboard.` |
 
 ---
