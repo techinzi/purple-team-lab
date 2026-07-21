@@ -216,18 +216,12 @@ This exercise triggered **Wazuh Rule 92032 – Suspicious Windows cmd shell exec
 
 ### Detection Gaps
 
-No
+No detection gap identified.
 
 ---
 
 ### Detection Improvements
-Not required.
-
----
-
-### Sigma Rule
-
-Not required.
+Not improvement required.
 
 ---
 
