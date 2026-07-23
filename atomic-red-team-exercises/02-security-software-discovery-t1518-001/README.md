@@ -195,7 +195,7 @@ Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" | Where-Object { $_
 $testStartTime = Get-Date "2026-07-18 22:44:00"
 $testEndTime = Get-Date "2026-07-18 22:46:00"
 
-# Search for generated Sysmon events
+# Search for generated Windows Security events
 Get-WinEvent -LogName "Security" | Where-Object { $_.Id -eq 4688 -and $_.TimeCreated -gt $testStartTime -and $_.TimeCreated -le $testEndTime -and $_.Message -match "netsh.exe|sc.exe|powershell.exe|tasklist.exe" } | Sort-Object TimeCreated | Select-Object TimeCreated, Id, Message | Format-List
 ```
 
