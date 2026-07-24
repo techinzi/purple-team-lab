@@ -160,7 +160,7 @@ Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" | Where-Object { $_
 
 ---
 
-### Step 2 — Windows Event Logs
+### Step 2 — Confirm Windows Event Logs Captured the Activity
 
 **Relevant Log and Event IDs:**
 
