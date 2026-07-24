@@ -304,7 +304,7 @@ The editor opens with the contents of `local_rules.xml`.
 
 Add the following rule inside `local_rules.xml` and click **Save**:
 
-```yaml
+```xml
 <group name="sysmon,discovery,T1012,">
     <rule id="100210" level="10">
         <if_sid>92025</if_sid>
@@ -350,7 +350,7 @@ On Wazuh Dashboard, go to:
 
 Select **WIN11-CLIENT01** agent and set time range as per test execution.
 
-Check if newly created firewall discovery detection triggered:
+Check if newly created detection triggered:
 
 ```
 rule.id: 100210
