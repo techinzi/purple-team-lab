@@ -296,7 +296,7 @@ Click the **Edit** (pencil) icon for `local_rules.xml`:
 
 ![Image](/images/atomic-red-team-exercises/03-query-registry-t1012/17-create-detection.png)
 
-The editor opens with the contents of `local_rules.xml`:
+The editor opens with the contents of `local_rules.xml`.
 
 ---
 
