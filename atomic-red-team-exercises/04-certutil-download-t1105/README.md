@@ -299,20 +299,34 @@ Reviewing these rules shows that they detect behaviors such as:
 However, none of the existing rules detect the use of `certutil.exe` with the
 `-urlcache` option to download a file from a remote location.
 
-Since there is no existing low-level rule that detects the execution of
-`certutil.exe` for file download, there is no suitable built-in parent
+Since there is no existing low-level rule that specifically detects
+`certutil.exe` file downloads, there is no suitable built-in parent
 rule (`<if_sid>`) that can be reused.
 
-Therefore, the custom detection will use the generic
-**Sysmon Process Creation** group as its parent:
+Instead, the custom detection will use the generic
+**Sysmon Process Creation** group (`sysmon_event1`) as its parent.
 
-```xml
-<if_group>sysmon_event1</if_group>
+On **ubuntu-server01**, verify that the `sysmon_event1` group is assigned to
+all Sysmon **EID 1 (Process Creation)** events:
+
+```bash
+# Find the rule that assigns the sysmon_event1 group
+sudo grep -R -n "<group>sysmon_event1" /var/ossec/ruleset
+
+# Display the relevant rule
+sudo nl -ba /var/ossec/ruleset/rules/0595-win-sysmon_rules.xml | sed -n '38,43p'
 ```
 
-This allows the custom rule to evaluate all Sysmon Event ID 1 process
-creation events and specifically detect `certutil.exe` executions using
-the `-urlcache` option.
+![Image](/images/atomic-red-team-exercises/04-certutil-download-t1105/14-create-detection-01.png)
+
+Rule **61603** assigns all **Sysmon EID 1** events to the `sysmon_event1` group.
+The custom rule can therefore inherit from this group.
+
+This allows the detection to evaluate all Sysmon **EID 1 (Process Creation)**
+events and specifically identify `certutil.exe` executions using the
+`-urlcache` option.
+
+---
 
 #### Step 2 — Navigate to Rules Editor
 
@@ -331,6 +345,8 @@ Click the **Edit** (pencil) icon for `local_rules.xml`:
 ![Image](/images/atomic-red-team-exercises/04-certutil-download-t1105/17-create-detection.png)
 
 The editor opens with the contents of `local_rules.xml`.
+
+---
 
 #### Step 3 — Create the Custom Detection Rule
 
@@ -352,6 +368,8 @@ Add the following rule inside `local_rules.xml` and click **Save**:
 
 Now click on **Restart**, confirm the restart when prompted and wait for
 the Wazuh Manager to restart.
+
+---
 
 #### Step 4 — Verify Rule is Loaded
 
